@@ -39,6 +39,7 @@ public class EciticHook {
 
     ArrayList<EciticTradeDetail> mList;
     private int position = 0;
+    private int mElementSize = 0; //待點擊列表總數
 
     private static final String START_DATE = "startDate";
     private static final String END_DATE = "endDate";
@@ -48,7 +49,7 @@ public class EciticHook {
 
     private static final String FLAG_IN = "收入";
     private static final String DEFAULT_FEE = "0";
-    private static final String DEFAULT_TRANSFER_TYPE = "";
+    private static final String DEFAULT_TRANSFER_TYPE = "網銀轉帳";
     private static final String DEFAULT_PRE_TRANS_ID = "";
     private static final String DEFAULT_IS_UNION_PAY = "0";
 
@@ -108,8 +109,9 @@ public class EciticHook {
                     Elements elements = Jsoup.parse(value).getElementsByClass("common_div_typeIn_sub");
                     Element element;
                     String t = "";
+                    mElementSize = elements.size();
 
-                    for (int i = 2; i < elements.size(); i++) {
+                    for (int i = 2; i < mElementSize; i++) {
                         element = elements.get(i);
 
                         t = element.child(0).text().replace("\\n", "").replace(" ", "");
@@ -228,7 +230,7 @@ public class EciticHook {
 //                                Intent intent = new Intent();
 //                                //創建一個Inten物件
 //
-//                                intent.setAction("Ian");
+//                                intent.setAction("xposed");
 //                                intent.putExtra("date", "20190304");
 //                                //設定Actio的辨識字串
 //
@@ -411,11 +413,18 @@ public class EciticHook {
                         detail.setOutName(outName);
                         detail.setFee(DEFAULT_FEE);
                         detail.setRemark(remark);
-                        //TODO
                         detail.setTransferType(DEFAULT_TRANSFER_TYPE);
                         detail.setTransferTime(transferTime);
-                        //TODO
                         detail.setPreTransID(DEFAULT_PRE_TRANS_ID);
+                        if(mList.size()-1 >= position && position-1 >= 0){
+                            mList.get(position-1).setPreTransID(transId);
+                        }
+
+//                        if (mList.size() > 0) {
+//                            detail.setPreTransID(mList.get(mList.size() - 1).getTransId());
+//                        } else if (mList.size() == mElementSize - 1) {
+//                            detail.setPreTransID(DEFAULT_PRE_TRANS_ID);
+//                        }
                         detail.setQueryType(mQueryType);
                         detail.setBalance(balance);
                         detail.setIsUnionPay(DEFAULT_IS_UNION_PAY);
