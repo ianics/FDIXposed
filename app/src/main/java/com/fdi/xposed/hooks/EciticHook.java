@@ -7,11 +7,13 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Environment;
 import android.os.Handler;
+import android.text.TextUtils;
 import android.util.Log;
 import android.webkit.ValueCallback;
 import android.webkit.WebView;
 
 import com.fdi.xposed.DataModel.EciticTradeDetail;
+import com.google.gson.Gson;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -45,12 +47,17 @@ public class EciticHook {
     private static final String ACCOUNT = "account";
 
     private static final String FLAG_IN = "收入";
+    private static final String DEFAULT_FEE = "0";
+    private static final String DEFAULT_TRANSFER_TYPE = "";
+    private static final String DEFAULT_PRE_TRANS_ID = "";
+    private static final String DEFAULT_IS_UNION_PAY = "0";
 
     private String mStartDate;
     private String mEndDate;
     private String mQueryType;
     private String mUserAccount;
     private String mUserName;
+    private String mNowBalance;
 
     public class TestBroadcastReceiver extends BroadcastReceiver {
 
@@ -72,24 +79,18 @@ public class EciticHook {
             if (mUserAccount == null) mUserAccount = "";
             if (mUserName == null) mUserName = "";
 
-            Log.e(TAG, "[BroadcastReceiver] getReceive = mStartDate:" + mStartDate +", mEndDate:"+mEndDate+", mQueryType:"+mQueryType);
+            Log.e(TAG, "[BroadcastReceiver] getReceive = mStartDate:" + mStartDate + ", mEndDate:" + mEndDate + ", mQueryType:" + mQueryType);
 
             if (mHookWebView == null)
                 return;
-
-//            mHookWebView.evaluateJavascript("(function(){ return var result =\"\";\n" +
-//                    "var tempobj = document.getElementsByClassName('common_div_typeIn_sub');\n" +
-//                    "for(int i=2; i<tempobj.length;i++){\n" +
-//                    "    result += i+\"/\"+tempobj[i].innerText+\",\"\n" +
-//                    "};\n" +
-//                    "return result;})();", new ValueCallback<String>() {
 
             XposedHelpers.callMethod(mHookWebView, "evaluateJavascript", "(function(){ return window.document.getElementsByTagName('html')[0].innerHTML})();", new ValueCallback<String>() {
                 @Override
                 public void onReceiveValue(String value) {
                     value = value.replace("\\u003C", "<");
                     value = value.replace("\\&quot;", "");
-                    value = value.replace("\\n", "");
+                    value = value.replace("\\\"", "\"");
+                    value = value.replace(" \\n", "");
 
 //                    int maxLogSize = 1000;
 //                    for (int i = 0; i <= value.length() / maxLogSize; i++) {
@@ -102,17 +103,21 @@ public class EciticHook {
 
                     mList = new ArrayList<>();
 
-                    File htmlFile = new File(Environment.getExternalStorageDirectory().getPath() + "/hookhtml");
-                    writeToFile(htmlFile, value);
+                    mNowBalance = Jsoup.parse(value).selectFirst("[data-name=CRTBAL]").text();
 
-                    for (Element element : Jsoup.parse(value).getElementsByClass("\\\"common_div_typeIn_sub\\\"")) {
-                        Log.e(TAG, "[Jsoup result] = className:" + element.className() + ", tagName:" + element.tagName() + ", element.text()=" + element.text());
+                    Elements elements = Jsoup.parse(value).getElementsByClass("common_div_typeIn_sub");
+                    Element element;
+                    String t = "";
 
-                        String result[] = element.text().split(" ");
+                    for (int i = 2; i < elements.size(); i++) {
+                        element = elements.get(i);
+
+                        t = element.child(0).text().replace("\\n", "").replace(" ", "");
+                        Log.e(TAG, "[Jsoup result] = className:" + element.className() + ", tagName:" + element.tagName() + ", element.text()=" + t + ", mNowBalance:" + mNowBalance);
 
                         EciticTradeDetail detail = new EciticTradeDetail();
-                        detail.setAmount(result[0]);
-                        detail.setTransferTime(result[1]);
+                        detail.setAmount(t.replace("+", "").replace(",", ""));
+                        detail.setNowBalance(mNowBalance);
                         mList.add(detail);
                     }
 
@@ -122,29 +127,6 @@ public class EciticHook {
                 }
             });
 
-
-//            XposedHelpers.callMethod(mHookWebView, "evaluateJavascript","(function(){ return document.getElementsByClassName('common_div_typeIn_sub')[2].click();})();", new ValueCallback<String>() {
-//                @Override
-//                public void onReceiveValue(String value) {
-//                    value = value.replace("\\u003C", "<");
-//                    value = value.replace("\\&quot;", "");
-//
-//                    int maxLogSize = 1000;
-//                    for (int i = 0; i <= value.length() / maxLogSize; i++) {
-//                        int start = i * maxLogSize;
-//                        int end = (i + 1) * maxLogSize;
-//                        end = end > value.length() ? value.length() : end;
-//
-//                        Log.e(TAG, "[onReceiveValue] html:" + value.substring(start, end));
-//                    }
-//
-//                    //TODO 擷取list
-//
-//                    //TODO 擷取detail
-//
-//
-//                }
-//            });
         }
     }
 
@@ -240,51 +222,22 @@ public class EciticHook {
 
                         mHookWebView = (WebView) param.args[0];
 
-//                        getHtmlString(param.args[0]);
+//                        new Handler().postDelayed(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                Intent intent = new Intent();
+//                                //創建一個Inten物件
+//
+//                                intent.setAction("Ian");
+//                                intent.putExtra("date", "20190304");
+//                                //設定Actio的辨識字串
+//
+//                                context.sendBroadcast(intent);
+//                            }
+//                        }, 5000L);
 
-
-                        new Handler().postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                Intent intent = new Intent();
-                                //創建一個Inten物件
-
-                                intent.setAction("Ian");
-                                intent.putExtra("date", "20190304");
-                                //設定Actio的辨識字串
-
-                                context.sendBroadcast(intent);
-                            }
-                        }, 5000L);
-
-//                        try {
-//                            new File(Environment.getExternalStorageDirectory().getPath()+"/test.json").createNewFile();
-//                        } catch (IOException e) {
-//                            e.printStackTrace();
-//                        } finally {
-//                            Log.e(TAG,"[file] isExist:"+new File(Environment.getExternalStorageDirectory().getPath()+"/test.json").exists());
-//                            Log.e(TAG,"[file] isExist:"+new File(Environment.getExternalStorageDirectory().getPath()+"/test.json").getAbsolutePath());
-//                        }
-
-//                        XposedHelpers.callMethod(XposedHelpers.callMethod(param.thisObject,"getContext"),"sendBroadcast",intent);
                     }
                 });
-
-//                XposedBridge.hookAllMethods(CBJSWebView, "loadData", new XC_MethodHook() {
-//                    @Override
-//                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-//                        super.afterHookedMethod(param);
-//                        String num = "";
-//                        for (int i = 0; i < param.args.length; i++) {
-//                            if (param.args[i] == null) {
-//                                num = "";
-//                            } else {
-//                                num = param.args[i].toString();
-//                            }
-//                            Log.i(TAG, "CBJSWebView loadData paraMeter[" + i + "] : " + num);
-//                        }
-//                    }
-//                });
 
                 final Class<?> ApplicationExtension = findClass("com.ecitic.bank.mobile.common.ApplicationExtension", classLoader);
 
@@ -299,7 +252,7 @@ public class EciticHook {
                         IntentFilter intentFilter = new IntentFilter();
 
                         // 2. 设置接收广播的类型
-                        intentFilter.addAction("Ian");
+                        intentFilter.addAction("xposed");
                         thisObject.registerReceiver(mBroadcastReceiver, intentFilter);
                     }
                 });
@@ -316,53 +269,6 @@ public class EciticHook {
 //
 //                    }
 //                });
-
-//                final Class<?> CBWebviewActivity = findClass("com.ecitic.bank.mobile.ui.CBWebviewActivity", classLoader);
-//
-//                XposedHelpers.findAndHookMethod(CBWebviewActivity, "onCreate", Bundle.class, new XC_MethodHook() {
-//                    @Override
-//                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-//                        super.afterHookedMethod(param);
-//
-//                        Log.i(TAG, "[CBWebviewActivity] onCreate Hook ");
-//
-////                        final Class<?> adapter = findClass("com.alipay.mobile.accountdetail.ui.DealListActivity$a", lpparam.classLoader);
-////
-////                        Log.e(TAG, "test:" + XposedHelpers.findField(adapter, "d").get("mListDatas").toString());
-//
-//                        //获取到当前hook的类,这里是CBWebviewActivity
-//                        Class clazz = param.thisObject.getClass();
-//                        Log.i(TAG, "class name:" + clazz.getName());
-//
-//                        // 通过反射获取控件，无论parivate或者public
-//                        Field field = clazz.getDeclaredField("mWebView");
-//                        // 设置访问权限
-//                        field.setAccessible(true);
-//
-//                        Log.i(TAG,"[HookTest] = "+field.toString());
-//
-//                        Log.i(TAG,"[Hook find best match]"+XposedHelpers.findMethodBestMatch(CBWebView,"setWebViewClient").toString());
-//
-////                        WebViewClient webViewClient = new WebViewClient(){
-////                            @Override
-////                            public void onPageFinished(WebView view, String url) {
-////                                super.onPageFinished(view, url);
-////
-////                                Log.i(TAG,"---------------------onPageFinished--------------------");
-////                            }
-////                        };
-////
-////                        Class<?> classs[] = {WebViewClient.class};
-////
-////                        XposedHelpers.callMethod(field,"setWebViewClient",classs,webViewClient);
-////
-////                        Object t = XposedHelpers.callMethod(field,"getWebViewClient");
-////
-////                        Log.i(TAG,"[Hook getWebViewClient] = "+t.toString());
-//
-//                    }
-//                });
-
 
             }
         });
@@ -395,7 +301,6 @@ public class EciticHook {
                     }
 
 
-
 //                    AndroidAppHelper.currentApplication().getSharedPreferences("Demo", Context.MODE_PRIVATE).edit().putString("Remark",value).apply();
                 }
 
@@ -406,72 +311,132 @@ public class EciticHook {
 //        },5000);
     }
 
-    public void getDetail(int position) {
-        position = position+2;
+    public void getDetail(final int position) {
+        Log.e(TAG, "[getDetail] position:" + position);
+        int realPosition = position + 2;
         XposedHelpers.callMethod(mHookWebView, "evaluateJavascript",
                 "(function(){ " +
-                        "document.getElementsByClassName('common_div_typeIn_sub')["+position+"].click();" +
-                        "return document.getElementsByClassName('fw-page-current fw-page-content')[0].innerHTML;"+
+                        "document.getElementsByClassName('common_div_typeIn_sub')[" + realPosition + "].click();" +
+                        "return document.getElementsByClassName('fw-page-current fw-page-content')[0].innerHTML;" +
                         "}()); ", new ValueCallback<String>() {
-            @Override
-            public void onReceiveValue(String value) {
-                value = value.replace("\\u003C", "<");
-                value = value.replace("\\&quot;", "");
-                value = value.replace("\\\"", "\"");
-                value = value.replace(" \\n", "");
+                    @Override
+                    public void onReceiveValue(String value) {
 
-                int maxLogSize = 1000;
-                for (int i = 0; i <= value.length() / maxLogSize; i++) {
-                    int start = i * maxLogSize;
-                    int end = (i + 1) * maxLogSize;
-                    end = end > value.length() ? value.length() : end;
+                        if (TextUtils.isEmpty(value)) return;
 
-                    Log.e(TAG, "[onReceiveValue] html:" + value.substring(start, end));
-                }
+                        value = value.replace("\\u003C", "<");
+                        value = value.replace("\\&quot;", "");
+                        value = value.replace("\\\"", "\"");
+                        value = value.replace(" \\n", "");
 
-                Document document = Jsoup.parse(value);
-
-//                String inOrOut = document.getElementsByAttribute("LOANFLAG").toString();
-//                String transId = document.getElementsByAttribute("TRANNO").toString();
+//                        int maxLogSize = 1000;
+//                        for (int i = 0; i <= value.length() / maxLogSize; i++) {
+//                            int start = i * maxLogSize;
+//                            int end = (i + 1) * maxLogSize;
+//                            end = end > value.length() ? value.length() : end;
 //
-//                String amount,inAccount,inName,outAccount,outName;
-//
-//                if(inOrOut.equals(FLAG_IN)){
-//                    outAccount = document.getElementsByAttribute("OTHERACCNO_Show").toString();
-//                    outName = document.getElementsByAttribute("OTHERACCNAME").toString();
-//                    inAccount = mUserAccount;
-//                    inName = mUserName;
-//                    amount = document.getElementsByAttribute("TRANAMT").toString();
-//                }else{
-//                    outAccount = mUserAccount;
-//                    outName = mUserName;
-//                    inAccount = document.getElementsByAttribute("OTHERACCNO_Show").toString();
-//                    inName = document.getElementsByAttribute("OTHERACCNAME").toString();
-//                    amount = "-"+document.getElementsByAttribute("TRANAMT").toString();
-//                }
-//
-//                String remark = document.getElementsByAttribute("MEMO").toString();
-//                String transferTime = document.getElementsByAttribute("TRANTIME").toString();
-//                String balance = document.getElementsByAttribute("BALAMT").toString();
-//
-//                Log.e(TAG,"[inOrOut]:"+inOrOut+", [transId]:"+transId+", [amount]:"+amount+", [inAccount]:"+inAccount+", [inName]:"+inName+", [outAccount]:"+outAccount+", [outName]:"+outName+
-//                        ", [remark]:"+remark+", [transferTime]:"+transferTime+", [balance]:"+balance);
+//                            Log.e(TAG, "[onReceiveValue] html:" + value.substring(start, end));
+//                        }
 
-                for(Element element:document.getAllElements()){
-                    Log.e(TAG,"[getDetail] element.text :"+element.text()+", element.toString :"+element.toString());
-                }
+                        Document document = Jsoup.parse(value);
 
+                        if (document == null) {
+                            return;
+                        }
 
+                        String inOrOut = "", transId = "", amount = "", inAccount = "", inName = "", outAccount = "", outName = "", remark = "", transferTime = "", balance = "";
 
+                        Element element = document.selectFirst("[data-name=LOANFLAG]");
+                        if (element != null) {
+                            inOrOut = element.text();
+                        }
+                        element = document.selectFirst("[data-name=TRANNO]");
+                        if (element != null) {
+                            transId = element.text();
+                        }
 
+                        if (inOrOut.equals(FLAG_IN)) {
+                            element = document.selectFirst("[data-name=OTHERACCNO_Show]");
+                            if (element != null) {
+                                outAccount = element.text();
+                            }
+                            element = document.selectFirst("[data-name=OTHERACCNAME]");
+                            if (element != null) {
+                                outName = element.text();
+                            }
+                            inAccount = mUserAccount;
+                            inName = mUserName;
+                            element = document.selectFirst("[data-name=TRANAMT]");
+                            if (element != null) {
+                                amount = element.text();
+                            }
+                        } else {
+                            outAccount = mUserAccount;
+                            outName = mUserName;
+                            element = document.selectFirst("[data-name=OTHERACCNO_Show]");
+                            if (element != null) {
+                                inAccount = element.text();
+                            }
+                            element = document.selectFirst("[data-name=OTHERACCNAME]");
+                            if (element != null) {
+                                inName = element.text();
+                            }
+                            element = document.selectFirst("[data-name=TRANAMT]");
+                            if (element != null) {
+                                amount = "-" + element.text();
+                            }
+                        }
 
-                //TODO 擷取list
+                        element = document.selectFirst("[data-name=MEMO]");
+                        if (element != null) {
+                            remark = element.text();
+                        }
+                        element = document.selectFirst("[data-name=TRANTIME]");
+                        if (element != null) {
+                            transferTime = element.text();
+                        }
+                        element = document.selectFirst("[data-name=BALAMT]");
+                        if (element != null) {
+                            balance = element.text();
+                        }
 
-                //TODO 擷取detail
+                        Log.e(TAG, "[inOrOut]:" + inOrOut + ", [transId]:" + transId + ", [amount]:" + amount + ", [inAccount]:" + inAccount + ", [inName]:" + inName + ", [outAccount]:" + outAccount + ", [outName]:" + outName +
+                                ", [remark]:" + remark + ", [transferTime]:" + transferTime + ", [balance]:" + balance);
 
+                        EciticTradeDetail detail = mList.get(position);
+                        detail.setTransId(transId);
+                        detail.setInAccount(inAccount);
+                        detail.setInName(inName);
+                        detail.setOutAccount(outAccount);
+                        detail.setOutName(outName);
+                        detail.setFee(DEFAULT_FEE);
+                        detail.setRemark(remark);
+                        //TODO
+                        detail.setTransferType(DEFAULT_TRANSFER_TYPE);
+                        detail.setTransferTime(transferTime);
+                        //TODO
+                        detail.setPreTransID(DEFAULT_PRE_TRANS_ID);
+                        detail.setQueryType(mQueryType);
+                        detail.setBalance(balance);
+                        detail.setIsUnionPay(DEFAULT_IS_UNION_PAY);
 
-            }
-        });
+//                        mList.add(position, detail);
+
+                        if (position + 1 < mList.size()) {
+                            final int nextPosition = position + 1;
+                            new Handler().postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    getDetail(nextPosition);
+                                }
+                            }, 1000);
+                        } else {
+                            File detailList = new File(Environment.getExternalStorageDirectory().getPath() + "/recordDetail.json");
+                            writeToFile(detailList, new Gson().toJson(mList));
+                        }
+
+                    }
+                });
     }
 
     private void writeToFile(File fout, String data) {
