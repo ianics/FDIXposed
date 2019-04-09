@@ -17,6 +17,7 @@ import com.fdi.xposed.hooks.AllClassHook;
 import com.fdi.xposed.hooks.CommonHook;
 import com.fdi.xposed.hooks.EciticHook;
 import com.fdi.xposed.hooks.HttpHook;
+import com.fdi.xposed.hooks.NetworkHook;
 import com.fdi.xposed.hooks.SpdbHook;
 import com.google.gson.Gson;
 
@@ -62,6 +63,7 @@ public class Hook implements IXposedHookLoadPackage {
 
         CommonHook.initHooking(lpparam.classLoader);
 //        AllClassHook.initHooking(lpparam.classLoader);
+//        NetworkHook.initHooking(lpparam.classLoader);
 
         switch (lpparam.packageName) {
             case PACKAGENAME_ECITIC:
