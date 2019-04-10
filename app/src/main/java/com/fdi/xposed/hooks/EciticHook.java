@@ -13,6 +13,7 @@ import android.webkit.ValueCallback;
 import android.webkit.WebView;
 
 import com.fdi.xposed.DataModel.EciticTradeDetail;
+import com.fdi.xposed.Utils;
 import com.google.gson.Gson;
 
 import org.jsoup.Jsoup;
@@ -104,7 +105,7 @@ public class EciticHook {
 
                     mList = new ArrayList<>();
 
-                    mNowBalance = Jsoup.parse(value).selectFirst("[data-name=CRTBAL]").text();
+                    mNowBalance = Jsoup.parse(value).selectFirst("[data-name=CRTBAL]").text().replace(",","");
 
                     Elements elements = Jsoup.parse(value).getElementsByClass("common_div_typeIn_sub");
                     Element element;
@@ -360,7 +361,7 @@ public class EciticHook {
                         if (inOrOut.equals(FLAG_IN)) {
                             element = document.selectFirst("[data-name=OTHERACCNO_Show]");
                             if (element != null) {
-                                outAccount = element.text();
+                                outAccount = element.text().trim().replace(" ","");
                             }
                             element = document.selectFirst("[data-name=OTHERACCNAME]");
                             if (element != null) {
@@ -377,7 +378,7 @@ public class EciticHook {
                             outName = mUserName;
                             element = document.selectFirst("[data-name=OTHERACCNO_Show]");
                             if (element != null) {
-                                inAccount = element.text();
+                                inAccount = element.text().trim().replace(" ","");
                             }
                             element = document.selectFirst("[data-name=OTHERACCNAME]");
                             if (element != null) {
@@ -391,7 +392,7 @@ public class EciticHook {
 
                         element = document.selectFirst("[data-name=MEMO]");
                         if (element != null) {
-                            remark = element.text();
+                            remark = Utils.filterNumber(element.text());
                         }
                         element = document.selectFirst("[data-name=TRANTIME]");
                         if (element != null) {
@@ -399,7 +400,7 @@ public class EciticHook {
                         }
                         element = document.selectFirst("[data-name=BALAMT]");
                         if (element != null) {
-                            balance = element.text();
+                            balance = element.text().replace(",","");
                         }
 
                         Log.e(TAG, "[inOrOut]:" + inOrOut + ", [transId]:" + transId + ", [amount]:" + amount + ", [inAccount]:" + inAccount + ", [inName]:" + inName + ", [outAccount]:" + outAccount + ", [outName]:" + outName +
