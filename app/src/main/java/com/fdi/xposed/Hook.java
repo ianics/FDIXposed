@@ -46,6 +46,7 @@ import de.robv.android.xposed.XSharedPreferences;
 import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
+
 import static de.robv.android.xposed.XposedHelpers.findClass;
 
 public class Hook implements IXposedHookLoadPackage {
@@ -56,7 +57,7 @@ public class Hook implements IXposedHookLoadPackage {
     private static final String PACKAGENAME_ECITIC = "com.ecitic.bank.mobile";
 
     private EciticHook mEciticHook = new EciticHook();
-
+    private SpdbHook mSpdbHook = new SpdbHook();
 
     @Override
     public void handleLoadPackage(final XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
@@ -69,6 +70,8 @@ public class Hook implements IXposedHookLoadPackage {
             case PACKAGENAME_ECITIC:
                 mEciticHook.initHooking(lpparam.classLoader);
                 break;
+            case PACKAGENAME_SPDB:
+                mSpdbHook.initHooking(lpparam.classLoader);
             default:
                 break;
         }

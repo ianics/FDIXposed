@@ -12,7 +12,7 @@ import android.util.Log;
 import android.webkit.ValueCallback;
 import android.webkit.WebView;
 
-import com.fdi.xposed.DataModel.EciticTradeDetail;
+import com.fdi.xposed.DataModel.TradeDetail;
 import com.fdi.xposed.Utils;
 import com.google.gson.Gson;
 
@@ -23,7 +23,6 @@ import org.jsoup.select.Elements;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 
@@ -38,7 +37,7 @@ public class EciticHook {
 
     private WebView mHookWebView;
 
-    ArrayList<EciticTradeDetail> mList;
+    ArrayList<TradeDetail> mList;
     private int position = 0;
     private int mElementSize = 0; //待點擊列表總數
 
@@ -105,7 +104,7 @@ public class EciticHook {
 
                     mList = new ArrayList<>();
 
-                    mNowBalance = Jsoup.parse(value).selectFirst("[data-name=CRTBAL]").text().replace(",","");
+                    mNowBalance = Jsoup.parse(value).selectFirst("[data-name=CRTBAL]").text().replace(",", "");
 
                     Elements elements = Jsoup.parse(value).getElementsByClass("common_div_typeIn_sub");
                     Element element;
@@ -118,7 +117,7 @@ public class EciticHook {
                         t = element.child(0).text().replace("\\n", "").replace(" ", "");
                         Log.e(TAG, "[Jsoup result] = className:" + element.className() + ", tagName:" + element.tagName() + ", element.text()=" + t + ", mNowBalance:" + mNowBalance);
 
-                        EciticTradeDetail detail = new EciticTradeDetail();
+                        TradeDetail detail = new TradeDetail();
                         detail.setAmount(t.replace("+", "").replace(",", ""));
                         detail.setNowBalance(mNowBalance);
                         mList.add(detail);
@@ -361,7 +360,7 @@ public class EciticHook {
                         if (inOrOut.equals(FLAG_IN)) {
                             element = document.selectFirst("[data-name=OTHERACCNO_Show]");
                             if (element != null) {
-                                outAccount = element.text().trim().replace(" ","");
+                                outAccount = element.text().trim().replace(" ", "");
                             }
                             element = document.selectFirst("[data-name=OTHERACCNAME]");
                             if (element != null) {
@@ -378,7 +377,7 @@ public class EciticHook {
                             outName = mUserName;
                             element = document.selectFirst("[data-name=OTHERACCNO_Show]");
                             if (element != null) {
-                                inAccount = element.text().trim().replace(" ","");
+                                inAccount = element.text().trim().replace(" ", "");
                             }
                             element = document.selectFirst("[data-name=OTHERACCNAME]");
                             if (element != null) {
@@ -400,13 +399,13 @@ public class EciticHook {
                         }
                         element = document.selectFirst("[data-name=BALAMT]");
                         if (element != null) {
-                            balance = element.text().replace(",","");
+                            balance = element.text().replace(",", "");
                         }
 
                         Log.e(TAG, "[inOrOut]:" + inOrOut + ", [transId]:" + transId + ", [amount]:" + amount + ", [inAccount]:" + inAccount + ", [inName]:" + inName + ", [outAccount]:" + outAccount + ", [outName]:" + outName +
                                 ", [remark]:" + remark + ", [transferTime]:" + transferTime + ", [balance]:" + balance);
 
-                        EciticTradeDetail detail = mList.get(position);
+                        TradeDetail detail = mList.get(position);
                         detail.setTransId(transId);
                         detail.setInAccount(inAccount);
                         detail.setInName(inName);
@@ -417,8 +416,8 @@ public class EciticHook {
                         detail.setTransferType(DEFAULT_TRANSFER_TYPE);
                         detail.setTransferTime(transferTime);
                         detail.setPreTransID(DEFAULT_PRE_TRANS_ID);
-                        if(mList.size()-1 >= position && position-1 >= 0){
-                            mList.get(position-1).setPreTransID(transId);
+                        if (mList.size() - 1 >= position && position - 1 >= 0) {
+                            mList.get(position - 1).setPreTransID(transId);
                         }
 
 //                        if (mList.size() > 0) {

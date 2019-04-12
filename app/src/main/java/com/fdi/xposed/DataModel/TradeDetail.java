@@ -2,7 +2,7 @@ package com.fdi.xposed.DataModel;
 
 import com.google.gson.annotations.SerializedName;
 
-public class EciticTradeDetail {
+public class TradeDetail {
     @SerializedName("transID")//唯一識別交易ID
     private String transId;
     @SerializedName("inAccount")//轉入帳號
