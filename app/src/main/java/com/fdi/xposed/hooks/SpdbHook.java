@@ -31,6 +31,7 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 
+import static android.provider.ContactsContract.CommonDataKinds.Event.START_DATE;
 import static com.fdi.xposed.Helper.RetrofitHelper.API_DOMAIN_SPDB;
 import static de.robv.android.xposed.XposedHelpers.findClass;
 
@@ -44,16 +45,25 @@ public class SpdbHook {
     private static final String DEFAULT_TRANSFER_TYPE = "網銀轉帳";
     private static final String DEFAULT_IS_UNION_PAY = "0";
 
+    private static final String START_DATE = "startDate";
+    private static final String END_DATE = "endDate";
+    private static final String QUERY_TYPE = "queryType";
+    private static final String NAME = "name";
+    private static final String ACCOUNT = "account";
+    private static final String PRE_TRAINS_ID = "preTransID";
+
     private WebView mHookWebView;
     private String mCookies = "";
 
-    private String mCardNumber = "";
     private int mQueryNumber = 0;
     private int mBeginNumber = 0;
     private String mBeginDate = "";
     private String mEndDate = "";
     private String mQueryType = "";
     private String mNowBalance = "";
+    private String mUserAccount = "";
+    private String mUserName = "";
+    private String mPreTransID = "";
 
     private ArrayList<SPDBTradeItem> mTradeList = null;
 
@@ -95,19 +105,19 @@ public class SpdbHook {
 
                         //TODO 抓當前餘額
 
-                        new Handler().postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                Intent intent = new Intent();
-                                //創建一個Inten物件
-
-                                intent.setAction(BROADCAST_ACTION_KEY);
-                                intent.putExtra("date", "20190304");
-                                //設定Actio的辨識字串
-
-                                context.sendBroadcast(intent);
-                            }
-                        }, 5000L);
+//                        new Handler().postDelayed(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                Intent intent = new Intent();
+//                                //創建一個Inten物件
+//
+//                                intent.setAction(BROADCAST_ACTION_KEY);
+//                                intent.putExtra("date", "20190304");
+//                                //設定Actio的辨識字串
+//
+//                                context.sendBroadcast(intent);
+//                            }
+//                        }, 5000L);
 
                     }
                 });
@@ -147,14 +157,29 @@ public class SpdbHook {
             if (mHookWebView == null)
                 return;
 
-            mCardNumber = "6217930975054622";
+            mBeginDate = intent.getStringExtra(START_DATE);
+            mEndDate = intent.getStringExtra(END_DATE);
+            mQueryType = intent.getStringExtra(QUERY_TYPE);
+            mUserAccount = intent.getStringExtra(ACCOUNT);
+            mUserName = intent.getStringExtra(NAME);
+            mPreTransID = intent.getStringExtra(PRE_TRAINS_ID);
+
+            if (mBeginDate == null) mBeginDate = "20190403";
+            if (mEndDate == null) mEndDate = "20190411";
+            if (mQueryType == null) mQueryType = "";
+            if (mUserAccount == null) mUserAccount = "";
+            if (mUserName == null) mUserName = "";
+            if (mPreTransID == null) mPreTransID = "-";
+
+            mUserName = "test";
+            mUserAccount = "6217930975054622";
             mQueryNumber = 100;
             mBeginNumber = 0;
             mBeginDate = "20190403";
             mEndDate = "20190411";
             mTradeList = new ArrayList<>();
 
-            getNowBalance(mHookWebView,mCardNumber);
+            getNowBalance(mHookWebView, mUserAccount);
 
         }
     }
@@ -170,7 +195,7 @@ public class SpdbHook {
                         mCookies = mCookies.replace("\"", "");
                         Log.e(TAG, "[return document.cookie] = " + mCookies);
 
-                        getListRequestBody(mCardNumber, mQueryNumber, mBeginNumber, mBeginDate, mEndDate);
+                        getListRequestBody(mUserAccount, mQueryNumber, mBeginNumber, mBeginDate, mEndDate);
                     }
                 });
     }
@@ -212,7 +237,7 @@ public class SpdbHook {
                             //列表還沒全部拉下來，需要繼續拉
                             if (list.size() == mQueryNumber) {
                                 Log.e(TAG, "[list.size() == queryNumber]");
-                                getListRequestBody(mCardNumber, mQueryNumber, mTradeList.size(), mBeginDate, mEndDate);
+                                getListRequestBody(mUserAccount, mQueryNumber, mTradeList.size(), mBeginDate, mEndDate);
                             } else {
                                 //TODO 如果有preTradeID 需要對列表做篩選後再要detail
                                 Log.e(TAG, "[list.size() != queryNumber] 列表全拉下來了，開始去要detailRequestBody");
@@ -285,14 +310,14 @@ public class SpdbHook {
         }
     }
 
-    private void getNowBalance(final Object webView,String cardNumber) {
+    private void getNowBalance(final Object webView, String cardNumber) {
         XposedHelpers.callMethod(webView, "evaluateJavascript",
-                "(function(){ return document.getElementById('Balance"+cardNumber+"').innerText})();",
+                "(function(){ return document.getElementById('Balance" + cardNumber + "').innerText})();",
                 new ValueCallback<String>() {
                     @Override
                     public void onReceiveValue(java.lang.String value) {
-                        mNowBalance = value.replace("\\\"","");
-                        Log.e(TAG,"[getNowBalance] = "+mNowBalance);
+                        mNowBalance = value.replace("\\\"", "").replace("\"", "");
+                        Log.e(TAG, "[getNowBalance] = " + mNowBalance);
                         getCookie();
                     }
                 });
@@ -311,13 +336,13 @@ public class SpdbHook {
             if (spdbTradeItem.getSign().equals("+")) {
                 temp.setInAccount(spdbTradeItem.getTranCnterAcctNo());
                 temp.setInName(spdbTradeItem.getTranCnterNm());
-//                temp.setOutAccount();
-//                temp.setOutName();
+                temp.setOutAccount(mUserAccount);
+                temp.setOutName(mUserName);
 
                 temp.setAmount(spdbTradeItem.getTranAmt());
             } else {
-//                temp.setInAccount();
-//                temp.setInName();
+                temp.setInAccount(mUserAccount);
+                temp.setInName(mUserName);
                 temp.setOutAccount(spdbTradeItem.getTranCnterAcctNo());
                 temp.setOutName(spdbTradeItem.getTranCnterNm());
                 temp.setAmount("-" + spdbTradeItem.getTranAmt());
@@ -333,7 +358,7 @@ public class SpdbHook {
                 temp.setPreTransID(mTradeList.get(i + 1).getBusinessId());
             } else {
                 //TODO 有點疑惑
-                temp.setPreTransID("-");
+                temp.setPreTransID(mPreTransID);
             }
 
             temp.setQueryType(mQueryType);
@@ -351,7 +376,7 @@ public class SpdbHook {
     }
 
     private void writeToFile(File fout, String data) {
-        Log.e(TAG,"[writeToFile] call.");
+        Log.e(TAG, "[writeToFile] call.");
         FileOutputStream osw = null;
         try {
             osw = new FileOutputStream(fout);
