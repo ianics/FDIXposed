@@ -10,6 +10,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class RetrofitHelper {
 
     public static String API_DOMAIN_SPDB = "https://wap.spdb.com.cn/";
+    public static String API_DOMAIN_PAB = "https://rmb.pingan.com.cn/";
+
     private static OkHttpClient mOkHttpClient;
 
     public static Retrofit getRetrofit(String domainUrl) {

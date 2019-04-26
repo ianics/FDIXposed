@@ -1,9 +1,10 @@
-package com.fdi.xposed.hooks;
+package com.fdi.xposed.hooks.common;
 
 import android.util.Log;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedBridge;
@@ -67,42 +68,46 @@ public class AllClassHook {
 
                             Log.v(TAG, "CLASS: " + strClassName + ", METHOD: " + m[i]);
 
-                            //XposedBridge.log("HOOKED CLASS-METHOD: "+strClazz+"-"+m[i].toString());
+//                            //XposedBridge.log("HOOKED CLASS-METHOD: "+strClazz+"-"+m[i].toString());
 //                            if (!Modifier.isAbstract(m[i].getModifiers())           // 过滤掉指定名称类中声明的抽象方法
 //                                    && !Modifier.isNative(m[i].getModifiers())     // 过滤掉指定名称类中声明的Native方法
 //                                    && !Modifier.isInterface(m[i].getModifiers())  // 过滤掉指定名称类中声明的接口方法
 //                            ) {
-
-                            // 对指定名称类中声明的非抽象方法进行java Hook处理
-
-                            if (strClassName.contains("CBWeb") || strClassName.contains("CBWebviewActivity")) {
-                                XposedBridge.hookMethod(m[i], new XC_MethodHook() {
-
-                                    // 被java Hook的类方法执行完毕之后，打印log日志
-                                    @Override
-                                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-
-                                        // 打印被java Hook的类方法的名称和参数类型等信息
-                                        Log.e(TAG, "HOOKED METHOD: " + strClassName + "-" + param.method.toString());
-
-                                        if (param.args == null || param.args.length == 0) {
-                                            return;
-                                        }
-
-                                        for (int i = 0; i < param.args.length; i++) {
-
-                                            String content = "";
-                                            if (param.args[i] != null) {
-                                                content = param.args[i].toString();
-                                            }
-
-                                            Log.e(TAG, "Parameter[" + i + "] = " + content);
-                                        }
-                                    }
-                                });
-                            } else {
-                                Log.v(TAG, "CLASS: " + strClassName + ", METHOD: " + m[i]);
-                            }
+//
+//                                // 对指定名称类中声明的非抽象方法进行java Hook处理
+//
+////                                if (!strClassName.contains("GesturePasswordActivity")) {
+//                                if (false) {
+//                                    XposedBridge.hookMethod(m[i], new XC_MethodHook() {
+//
+//                                        // 被java Hook的类方法执行完毕之后，打印log日志
+//                                        @Override
+//                                        protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+//
+//                                            // 打印被java Hook的类方法的名称和参数类型等信息
+//                                            Log.e(TAG, "HOOKED METHOD: " + strClassName + "-" + param.method.toString());
+//
+//                                            if (param.args != null && param.args.length != 0) {
+//                                                for (int i = 0; i < param.args.length; i++) {
+//
+//                                                    String content = "";
+//                                                    if (param.args[i] != null) {
+//                                                        content = param.args[i].toString();
+//                                                    }
+//
+//                                                    Log.e(TAG, "Parameter[" + i + "] = " + content);
+//                                                }
+//                                            }
+//
+//
+//                                            if (param.getResult() != null) {
+//                                                Log.e(TAG, "result = " + param.getResult());
+//                                            }
+//                                        }
+//                                    });
+//                                } else {
+//                                    Log.v(TAG, "CLASS: " + strClassName + ", METHOD: " + m[i]);
+//                                }
 //                            }
                         }
 

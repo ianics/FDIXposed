@@ -1,48 +1,25 @@
 package com.fdi.xposed;
 
 import android.app.Activity;
-import android.app.AndroidAppHelper;
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.content.pm.ApplicationInfo;
-import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.webkit.ValueCallback;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
 
-import com.fdi.xposed.hooks.AllClassHook;
-import com.fdi.xposed.hooks.CommonHook;
-import com.fdi.xposed.hooks.EciticHook;
-import com.fdi.xposed.hooks.HttpHook;
-import com.fdi.xposed.hooks.NetworkHook;
-import com.fdi.xposed.hooks.SpdbHook;
+import com.fdi.xposed.hooks.common.AllClassHook;
+import com.fdi.xposed.hooks.common.CommonHook;
+import com.fdi.xposed.hooks.bank.EciticHook;
+import com.fdi.xposed.hooks.bank.PABHook;
+import com.fdi.xposed.hooks.bank.SpdbHook;
+import com.fdi.xposed.hooks.common.JustTrustMeHook;
 import com.google.gson.Gson;
 
-import org.json.JSONObject;
-
-import java.io.IOException;
-import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
-import dalvik.system.DexFile;
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
-import de.robv.android.xposed.XSharedPreferences;
 import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
@@ -55,16 +32,22 @@ public class Hook implements IXposedHookLoadPackage {
     private static final String PACKAGENAME_ALIPAY = "com.eg.android.AlipayGphone";
     private static final String PACKAGENAME_SPDB = "cn.com.spdb.mobilebank.per";
     private static final String PACKAGENAME_ECITIC = "com.ecitic.bank.mobile";
+    private static final String PACKAGENAME_PAB = "com.pingan.paces.ccms";
 
     private EciticHook mEciticHook = new EciticHook();
     private SpdbHook mSpdbHook = new SpdbHook();
+    private PABHook mPabHook = new PABHook();
+    private JustTrustMeHook mJustTrustMeHook = new JustTrustMeHook();
 
     @Override
     public void handleLoadPackage(final XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
 
+//        mJustTrustMeHook.handleLoadPackage(lpparam);
         CommonHook.initHooking(lpparam.classLoader);
 //        AllClassHook.initHooking(lpparam.classLoader);
 //        NetworkHook.initHooking(lpparam.classLoader);
+
+//        Log.e(TAG,"[packageName] : "+lpparam.packageName);
 
         switch (lpparam.packageName) {
             case PACKAGENAME_ECITIC:
@@ -72,6 +55,10 @@ public class Hook implements IXposedHookLoadPackage {
                 break;
             case PACKAGENAME_SPDB:
                 mSpdbHook.initHooking(lpparam.classLoader);
+                break;
+            case PACKAGENAME_PAB:
+                mPabHook.initHooking(lpparam.classLoader);
+                break;
             default:
                 break;
         }

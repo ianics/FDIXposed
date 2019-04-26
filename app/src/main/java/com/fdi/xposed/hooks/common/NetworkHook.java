@@ -1,8 +1,7 @@
-package com.fdi.xposed.hooks;
+package com.fdi.xposed.hooks.common;
 
 import android.util.Log;
 
-import java.net.DatagramPacket;
 import java.net.InetSocketAddress;
 import java.util.Map;
 

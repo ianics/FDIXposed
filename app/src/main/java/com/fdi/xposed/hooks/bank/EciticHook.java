@@ -1,4 +1,4 @@
-package com.fdi.xposed.hooks;
+package com.fdi.xposed.hooks.bank;
 
 import android.app.Application;
 import android.content.BroadcastReceiver;
@@ -59,6 +59,18 @@ public class EciticHook {
     private String mUserAccount;
     private String mUserName;
     private String mNowBalance;
+
+//    private void clickElement() {
+//        Log.d("neo", " mHookWebView == null " + (mHookWebView == null));
+//        if (mHookWebView == null)
+//            return;
+//        XposedHelpers.callMethod(mHookWebView, "evaluateJavascript", "(function(){window.document.getElementsById('" + mElementId + "').click()})();", new ValueCallback<String>() {
+//            @Override
+//            public void onReceiveValue(String value) {
+//                Log.d("neo", "onReceiveValue = " + value);
+//            }
+//        });
+//    }
 
     public class TestBroadcastReceiver extends BroadcastReceiver {
 

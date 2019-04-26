@@ -1,4 +1,4 @@
-package com.fdi.xposed.hooks;
+package com.fdi.xposed.hooks.bank;
 
 import android.app.Application;
 import android.content.BroadcastReceiver;
@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Environment;
-import android.os.Handler;
 import android.util.Log;
 import android.webkit.ValueCallback;
 import android.webkit.WebView;
@@ -31,7 +30,6 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 
-import static android.provider.ContactsContract.CommonDataKinds.Event.START_DATE;
 import static com.fdi.xposed.Helper.RetrofitHelper.API_DOMAIN_SPDB;
 import static de.robv.android.xposed.XposedHelpers.findClass;
 
@@ -103,8 +101,6 @@ public class SpdbHook {
 
                         mHookWebView = (WebView) param.args[0];
 
-                        //TODO 抓當前餘額
-
 //                        new Handler().postDelayed(new Runnable() {
 //                            @Override
 //                            public void run() {
@@ -171,12 +167,12 @@ public class SpdbHook {
             if (mUserName == null) mUserName = "";
             if (mPreTransID == null) mPreTransID = "-";
 
-            mUserName = "test";
-            mUserAccount = "6217930975054622";
+//            mUserName = "hank";
+//            mUserAccount = "6217930975054622";
             mQueryNumber = 100;
             mBeginNumber = 0;
-            mBeginDate = "20190403";
-            mEndDate = "20190411";
+//            mBeginDate = "20190403";
+//            mEndDate = "20190411";
             mTradeList = new ArrayList<>();
 
             getNowBalance(mHookWebView, mUserAccount);
@@ -334,17 +330,16 @@ public class SpdbHook {
             temp.setTransId(spdbTradeItem.getBusinessId());
 
             if (spdbTradeItem.getSign().equals("+")) {
-                temp.setInAccount(spdbTradeItem.getTranCnterAcctNo());
-                temp.setInName(spdbTradeItem.getTranCnterNm());
-                temp.setOutAccount(mUserAccount);
-                temp.setOutName(mUserName);
-
-                temp.setAmount(spdbTradeItem.getTranAmt());
-            } else {
                 temp.setInAccount(mUserAccount);
                 temp.setInName(mUserName);
                 temp.setOutAccount(spdbTradeItem.getTranCnterAcctNo());
                 temp.setOutName(spdbTradeItem.getTranCnterNm());
+                temp.setAmount(spdbTradeItem.getTranAmt());
+            } else {
+                temp.setInAccount(spdbTradeItem.getTranCnterAcctNo());
+                temp.setInName(spdbTradeItem.getTranCnterNm());
+                temp.setOutAccount(mUserAccount);
+                temp.setOutName(mUserName);
                 temp.setAmount("-" + spdbTradeItem.getTranAmt());
             }
 

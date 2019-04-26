@@ -1,11 +1,7 @@
-package com.fdi.xposed.hooks;
+package com.fdi.xposed.hooks.common;
 
 import android.app.Activity;
 import android.app.Application;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.webkit.WebView;

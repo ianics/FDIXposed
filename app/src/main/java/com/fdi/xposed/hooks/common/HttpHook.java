@@ -1,4 +1,4 @@
-package com.fdi.xposed.hooks;
+package com.fdi.xposed.hooks.common;
 
 import android.os.Build;
 import android.util.Log;
