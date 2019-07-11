@@ -138,8 +138,8 @@ public class PABHook extends BaseHook {
 //                                    //創建一個Inten物件
 //
 //                                    intent.setAction(BROADCAST_ACTION_KEY);
-//                                    intent.putExtra(KEY_START_DATE, "20190201");
-//                                    intent.putExtra(KEY_END_DATE, "20190424");
+//                                    intent.putExtra(KEY_START_DATE, "20190625");
+//                                    intent.putExtra(KEY_END_DATE, "20190625");
 //                                    intent.putExtra(KEY_QUERY_TYPE, "一般查詢");
 //                                    intent.putExtra(KEY_PRE_TRAINS_ID, "-");
 //                                    intent.putExtra(KEY_ACCOUNT, "sample_account");
@@ -257,6 +257,7 @@ public class PABHook extends BaseHook {
                 new ValueCallback<String>() {
                     @Override
                     public void onReceiveValue(String value) {
+                        Log.e(TAG, "[getEncodeAccount] 取得加密帳號原始資料 = " + value);
                         mEncodeAccount = value.substring(value.indexOf(mEncodeAccountStart) + mEncodeAccountStart.length(), value.indexOf(mEncodeAccountEnd));
                         Log.e(TAG, "[getEncodeAccount] 取得加密帳號 = " + mEncodeAccount);
 
@@ -309,13 +310,16 @@ public class PABHook extends BaseHook {
     }
 
     private void toTradeDetailList() {
-        Log.e(TAG, "[toTradeDetailList] 轉換列表資料為後台所需格式中");
+        Log.e(TAG, "[toTradeDetailList] 轉換列表資料為後台所需格式中，所需轉換資料量："+mTradeList.size());
 
         ArrayList<TradeDetail> tradeDetailList = new ArrayList<>();
         TradeDetail temp;
         PABTradeItem pabTradeItem;
 
         for (int i = 0; i < mTradeList.size(); i++) {
+
+            Log.e(TAG, "[toTradeDetailList] 轉換中："+i);
+
             pabTradeItem = mTradeList.get(i);
 
             temp = new TradeDetail();
@@ -323,16 +327,16 @@ public class PABHook extends BaseHook {
             //交易ID
             temp.setTransId(pabTradeItem.getTranSysNo());
             //交易金額
-            temp.setAmount(((pabTradeItem.getToAcctFlag().equals("02") ? "-" : "") + pabTradeItem.getTranAmt()));
+            temp.setAmount(((pabTradeItem.getIpFlag().equals("1") ? "-" : "") + pabTradeItem.getTranAmt()));
             //交易時間
             temp.setTransferTime(pabTradeItem.getTranTime());
             //該筆交易餘額
-            temp.setBalance(pabTradeItem.getAvailBalance().replace(",", ""));
+            temp.setBalance(pabTradeItem.getBalance().replace(",", ""));
 
             //如果是二維碼支付會沒有對方銀行帳號，導致寫Transaction出錯，所以放toClientName
-            temp.setOutAccount(pabTradeItem.getToAcctFlag().equals("02") ?
+            temp.setOutAccount(temp.getAmount().contains("-") ?
                     TextUtils.isEmpty(pabTradeItem.getToAcctNo()) ? pabTradeItem.getToClientName() : pabTradeItem.getToAcctNo() : pabTradeItem.getFromAcctNo());
-            temp.setOutName(pabTradeItem.getToAcctFlag().equals("02") ? pabTradeItem.getToClientName() : pabTradeItem.getFromClientName());
+            temp.setOutName(temp.getAmount().contains("-") ? pabTradeItem.getToClientName() : pabTradeItem.getFromClientName());
 
             temp.setRemark(Utils.filterNumber(pabTradeItem.getUserRemark()));
 
@@ -370,10 +374,10 @@ public class PABHook extends BaseHook {
                 temp.setOutName(pabTradeItem.getRemark());
             }
 
-            if(!pabTradeItem.getToAcctFlag().equals("02")){
+            if (!temp.getAmount().contains("-")) {
                 temp.setInAccount(mAccount);
                 temp.setInName(pabTradeItem.getToClientName());
-            }else{
+            } else {
                 temp.setInAccount(temp.getOutAccount());
                 temp.setInName(temp.getOutName());
                 temp.setOutAccount(mAccount);
